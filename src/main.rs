@@ -31,7 +31,10 @@ fn get_numbers_from_input() -> Option<Vec<u8>> {
     match numbers {
         Ok(nums) => Some(nums),
         Err(e) => {
-            eprintln!("Invalid number input: {}. Please enter space-separated positive integers.", e);
+            eprintln!(
+                "Invalid number input: {}. Please enter space-separated positive integers.",
+                e
+            );
             None
         }
     }
@@ -43,7 +46,9 @@ fn read_yes_no() -> bool {
         io::stdout().flush().unwrap();
 
         let mut input = String::new();
-        io::stdin().read_line(&mut input).expect("Failed to read line");
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
         let trimmed_input = input.trim().to_lowercase();
 
         match trimmed_input.as_str() {
@@ -57,12 +62,18 @@ fn read_yes_no() -> bool {
 impl Process {
     fn new(id: usize, allocation: Vec<u8>, max_need: Vec<u8>) -> Result<Process, String> {
         if allocation.len() != max_need.len() {
-            return Err(format!("Process {}: Allocation and Max Need length mismatch.", id));
+            return Err(format!(
+                "Process {}: Allocation and Max Need length mismatch.",
+                id
+            ));
         }
         let mut need: Vec<u8> = Vec::with_capacity(allocation.len());
         for i in 0..allocation.len() {
             if allocation[i] > max_need[i] {
-                 return Err(format!("Process {}: Allocation ({}) exceeds Max Need ({}) for resource {}.", id, allocation[i], max_need[i], i));
+                return Err(format!(
+                    "Process {}: Allocation ({}) exceeds Max Need ({}) for resource {}.",
+                    id, allocation[i], max_need[i], i
+                ));
             }
             need.push(max_need[i] - allocation[i]);
         }
@@ -90,7 +101,7 @@ impl BankersAlgorithm {
 
         let num_resources = resources.len();
 
-        let mut processes: Vec<Process> =  Vec::new();
+        let mut processes: Vec<Process> = Vec::new();
         let mut total_allocated = vec![0u8; num_resources];
 
         println!("\n--- Process Creation ---");
@@ -100,7 +111,10 @@ impl BankersAlgorithm {
             println!("\n --- Enter details for P{} ---", process_id);
 
             let allocation = loop {
-                print!("Enter current allocation for P{} ({} values):", process_id, num_resources);
+                print!(
+                    "Enter current allocation for P{} ({} values):",
+                    process_id, num_resources
+                );
                 io::stdout().flush().unwrap();
 
                 if let Some(alloc) = get_numbers_from_input() {
@@ -109,21 +123,33 @@ impl BankersAlgorithm {
 
                         for i in 0..num_resources {
                             if alloc[i] > resources[i] {
-                                eprintln!("Error P{} allocation ({}) for resource {} exceeds total resources ({}).", process_id, alloc[i], i, resources[i]);
+                                eprintln!(
+                                    "Error P{} allocation ({}) for resource {} exceeds total resources ({}).",
+                                    process_id, alloc[i], i, resources[i]
+                                );
                                 possible = false;
                                 break;
                             }
                         }
-                        if possible {break alloc;}
+                        if possible {
+                            break alloc;
+                        }
                     } else {
-                        eprintln!("Error! Expected {} values for allocation, got {}.", num_resources, alloc.len());
+                        eprintln!(
+                            "Error! Expected {} values for allocation, got {}.",
+                            num_resources,
+                            alloc.len()
+                        );
                     }
                 }
                 println!("Try again");
             };
 
             let max_need = loop {
-                print!("Enter maximum need for P{} ({} values): ", process_id, num_resources);
+                print!(
+                    "Enter maximum need for P{} ({} values): ",
+                    process_id, num_resources
+                );
                 io::stdout().flush().unwrap();
 
                 if let Some(max) = get_numbers_from_input() {
@@ -132,16 +158,24 @@ impl BankersAlgorithm {
 
                         for i in 0..num_resources {
                             if max[i] > resources[i] {
-                                eprintln!("Error! P{} max need({}) for resource {} exceeds total system resources ({})", process_id, max[i], i, resources[i]);
+                                eprintln!(
+                                    "Error! P{} max need({}) for resource {} exceeds total system resources ({})",
+                                    process_id, max[i], i, resources[i]
+                                );
                                 possible = false;
                                 break;
                             }
                         }
-                        
-                        if possible {break max;} 
 
+                        if possible {
+                            break max;
+                        }
                     } else {
-                        eprintln!("Error! Expected {} values for maximum need, got {}.", num_resources, max.len());
+                        eprintln!(
+                            "Error! Expected {} values for maximum need, got {}.",
+                            num_resources,
+                            max.len()
+                        );
                     }
                 }
                 println!("Try again!.");
@@ -153,7 +187,7 @@ impl BankersAlgorithm {
                         total_allocated[i] += process.allocation[i];
                     }
                     processes.push(process);
-                }, 
+                }
                 Err(e) => {
                     eprintln!("Error creating process P{}: {}", process_id, e);
                     println!("Please re-enter details for P{}", process_id);
@@ -177,9 +211,9 @@ impl BankersAlgorithm {
             let avail = resources[i] as i32 - total_allocated[i] as i32;
             if avail < 0 {
                 eprintln!(
-                "Error! Total allocated resources ({}) for resource {} exceed total available system resources ({}). Invalid initial state.",
+                    "Error! Total allocated resources ({}) for resource {} exceed total available system resources ({}). Invalid initial state.",
                     total_allocated[i], i, resources[i]
-            );
+                );
                 possible_state = false
             }
             available.push(avail);
@@ -195,15 +229,18 @@ impl BankersAlgorithm {
         println!("Initial Available: {:?}", available);
 
         for p in &processes {
-            println!(" P{}: Allocated={:?}, Max={:?}, Need={:?} ", p.id, p.allocation, p.max_need, p.need);
+            println!(
+                " P{}: Allocated={:?}, Max={:?}, Need={:?} ",
+                p.id, p.allocation, p.max_need, p.need
+            );
         }
         println!("-----------------------------------");
 
         Some(BankersAlgorithm {
-                    available,
-                    resources,
-                    processes,
-                })
+            available,
+            resources,
+            processes,
+        })
     }
 
     fn is_safe_state(&mut self) -> Option<Vec<usize>> {
@@ -261,7 +298,7 @@ fn main() {
 
                 let seq: Vec<String> = sequence.iter().map(|&id| format!("P{}", id)).collect();
                 println!("  Safe sequence: {}", seq.join(" -> "));
-            },
+            }
             None => {
                 eprintln!("System is in an unsafe state! Deadlock potential exists");
             }
